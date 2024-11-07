@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Absensi Rapat</title>
+    <style>
+        /* Reset umum */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Warna utama */
+        :root {
+            --primary-color: #6200ea;
+            --secondary-color: #03dac6;
+            --text-color: #333;
+            --background-color: #f5f5f5;
+            --card-background: #ffffff;
+            --button-color: #6200ea;
+            --button-text-color: #ffffff;
+        }
+
+        /* Tampilan keseluruhan */
+        body {
+            background-color: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--background-color);
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 20px;
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 14px;
+        }
+
+        /* Kartu/form */
+        .card {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-title {
+            font-size: 18px;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+        }
+
+        /* Form input */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 4px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        /* Tombol */
+        .button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--button-color);
+            color: var(--button-text-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #3700b3;
+        }
+
+        /* Tabel riwayat */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        table th,
+        table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        table td {
+            font-size: 13px;
+            color: var(--text-color);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .badge-present {
+            background-color: var(--secondary-color);
+        }
+
+        .badge-absent {
+            background-color: #f44336;
+        }
+
+        .badge-sick {
+            background-color: #ff9800;
+        }
+
+        /* Tampilan cetak */
+        @media print {
+            /* Hanya tampilkan tabel */
+            body * {
+                visibility: hidden;
+            }
+            .table-container, .table-container * {
+                visibility: visible;
+            }
+            .table-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+            }
+
+            /* Sembunyikan tombol cetak */
+            .button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistem Absensi Rapat</h1>
+            <p>Maintenace</p>
+        </div>
+
+        <div class="card">
+            <h2 class="form-title">Form Absensi</h2>
+            <form id="attendanceForm">
+                <div class="form-group">
+                    <label for="date">Tanggal</label>
+                    <input type="date" id="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="session">Sesi Rapat</label>
+                    <select id="session" required>
+                        <option value="">Pilih Sesi</option>
+                        <option value="pagi">Pagi (08:00 WIB)</option>
+                        <option value="sore">Sore (15:00 WIB)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Nama Peserta</label>
+                    <select id="name" required>
+                        <option value="">Pilih Peserta</option>
+                        <option value="Tony">Tony</option>
+                        <option value="Sarminto">Sarminto</option>
+                        <option value="Bowo">Bowo</option>
+                        <option value="Arlana">Arlana</option>
+                        <option value="Sopiah">Sopiah</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Status Kehadiran</label>
+                    <select id="status" required onchange="toggleReason()">
+                        <option value="hadir">Hadir</option>
+                        <option value="tidak_hadir">Tidak Hadir</option>
+                        <option value="sakit">Sakit</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="reasonGroup" style="display: none;">
+                    <label for="reason">Alasan/Keterangan</label>
+                    <input type="text" id="reason" placeholder="Masukkan alasan">
+                </div>
+
+                <button type="submit" class="button">Simpan Absensi</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2 class="form-title">Riwayat Absensi</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Sesi</th>
+                            <th>Nama</th>
+                            <th>Status</th>
+                            <th>Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceHistory">
+                        <!-- Data akan ditambahkan di sini -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <button onclick="printAttendance()" class="button">Cetak Riwayat Absensi</button>
+    </div>
+
+    <script>
+        function printAttendance() {
+            window.print();
+        }
+
+        function toggleReason() {
+            const status = document.getElementById('status').value;
+            const reasonGroup = document.getElementById('reasonGroup');
+            reasonGroup.style.display = status !== 'hadir' ? 'block' : 'none';
+        }
+
+        const attendedParticipants = new Set();
+
+        document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const date = document.getElementById('date').value;
+            const session = document.getElementById('session').value;
+            const name = document.getElementById('name').value;
+            const status = document.getElementById('status').value;
+            const reason = document.getElementById('reason').value;
+            
+            const attendanceKey = `${date}-${session}-${name}`;
+            if (attendedParticipants.has(attendanceKey)) {
+                alert('Peserta ini sudah diabsen untuk tanggal dan sesi yang sama!');
+                return;
+            }
+
+            const tbody = document.getElementById('attendanceHistory');
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${new Date(date).toLocaleDateString('id-ID', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                })}</td>
+                <td><span class="badge ${session === 'pagi' ? 'badge-morning' : 'badge-afternoon'}">${session === 'pagi' ? 'Pagi (08:00)' : 'Sore (15:00)'}</span></td>
+                <td>${name}</td>
+                <td><span class="badge ${status === 'hadir' ? 'badge-present' : status === 'sakit' ? 'badge-sick' : 'badge-absent'}">${status === 'hadir' ? 'Hadir' : status === 'sakit' ? 'Sakit' : 'Tidak Hadir'}</span></td>
+                <td>${reason || '-'}</td>
+            `;
+            
+            tbody.insertBefore(tr, tbody.firstChild);
+
+            attendedParticipants.add(attendanceKey);
+
+            document.getElementById('name').value = '';
+            document.getElementById('status').value = 'hadir';
+            document.getElementById('reason').value = '';
+            document.getElementById('reasonGroup').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
